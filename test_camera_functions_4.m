@@ -2,6 +2,8 @@
 % >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 clc, clear all, fid = 1;
+rand('seed', 0)
+randn('seed', 0)
 
 % -----------------------------
 % (1) Generate the world Points
@@ -45,6 +47,7 @@ for i=2:length(C)
     % (e) Recover Structure (Triangulation)
     [Xt,C{i}] = triangulate3DPoint1(C{i-1},C{i},id_C1,id_C2,Rt_all);
     
+
     % (f) Update <X>, <X_ind>, and <M> using <id_global>
     % ...
 %     if i==3
@@ -55,6 +58,36 @@ for i=2:length(C)
 %     
     [id_new,ind_id_global] = setdiff(id_global,id_X);   % new points and their index in <id_global>
     [~,ind1,ind2] = intersect(id_global,id_X);          % for old points seen in C{i}
+    
+    % >>>>>>>>>> Compute relative scale
+    % http://rpg.ifi.uzh.ch/docs/Visual_Odometry_Tutorial.pdf
+    if length(ind1)>=2      % distance needs at least two points
+        X1 = Xt(:, ind1);
+        X2 = X(:, ind2);
+        % Find distance between all points in each set
+        % All combinations without repetition of considering the same
+        % point, i.e. consider the upper triangle on n*n matrix of indices
+        % For speed we can use a few instead of all.
+        ind_t0 = find(triu(reshape(1:length(ind1)^2, length(ind1), []),1));
+        [ind_t1, ind_t2] = ind2sub(length(ind1), ind_t0);
+        num = distance_point_point(X2(:,ind_t1), X2(:,ind_t2));
+        den = distance_point_point(X1(:,ind_t1), X1(:,ind_t2));
+        r_all = num./den;
+        r = mean(r_all);
+        %r = median(r_all);      % use this one in the presence of outliers
+
+        % >>>>>>>>>>>>>>>>>>>>>>>
+        % Change the above structure to differentiate between camera
+        % pose and transformation between cameras.
+        % Change the above <triangulate3DPoint1> function to return 3D
+        % points wrt first camera, also return best transformation.
+        % Also include lines as well as points.
+        % >>>>>>>>>>>>>>>>>>>>>>>
+        
+        
+    end
+    
+    
     X = [X, Xt(:,ind_id_global)];
     id_X = [id_X, id_new];
     % Update <M>:

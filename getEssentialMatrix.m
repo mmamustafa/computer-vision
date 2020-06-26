@@ -49,7 +49,7 @@ x2 = C2.pixel(:,id_C2);
 % Constrcut A matrix such that A*f = 0.
 np = length(x1_hat);    % number of matched points
 if np<8
-    error('8-point Algorithm requires at least 8 matched points!')
+    error('8-point Algorithm requires at least 8 distinct matched points!')
 end
 
 A = zeros(np,9);
